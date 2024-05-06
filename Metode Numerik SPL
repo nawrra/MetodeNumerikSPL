@@ -1,0 +1,51 @@
+import numpy as np
+from scipy.linalg import lu_factor, lu_solve
+
+def matriks_balikan(A, B):
+    A_inv = np.linalg.inv(A)
+    X = np.dot(A_inv, B)
+    return X
+
+def lu_gauss(A, B):
+    lu, piv = lu_factor(A)
+    X = lu_solve((lu, piv), B)
+    return X
+
+def crout(A, B):
+    n = len(A)
+    L = np.zeros((n, n))
+    U = np.zeros((n, n))
+
+    for i in range(n):
+        L[i, i] = 1
+        for j in range(i, n):
+            U[i, j] = A[i, j] - sum(L[i, k] * U[k, j] for k in range(i))
+        for j in range(i+1, n):
+            L[j, i] = (A[j, i] - sum(L[j, k] * U[k, i] for k in range(i))) / U[i, i]
+
+    Y = np.linalg.solve(L, B)
+    X = np.linalg.solve(U, Y)
+    return X
+
+# Fungsi untuk melakukan pengujian
+def test():
+    A = np.array([[3, 2, -1], [2, -2, 4], [-1, 0.5, -1]])
+    B = np.array([1, -2, 0])
+    
+    X_balikan = matriks_balikan(A, B)
+    X_lu_gauss = lu_gauss(A, B)
+    X_crout = crout(A, B)
+
+    print("Solusi menggunakan metode matriks balikan:", X_balikan)
+    print("Solusi menggunakan metode dekomposisi LU Gauss:", X_lu_gauss)
+    print("Solusi menggunakan metode dekomposisi Crout:", X_crout)
+
+    # Menguji kebenaran solusi
+    assert np.allclose(np.dot(A, X_balikan), B), "Metode matriks balikan tidak memberikan solusi yang benar"
+    assert np.allclose(np.dot(A, X_lu_gauss), B), "Metode dekomposisi LU Gauss tidak memberikan solusi yang benar"
+    assert np.allclose(np.dot(A, X_crout), B), "Metode dekomposisi Crout tidak memberikan solusi yang benar"
+
+    print("Pengujian berhasil.")
+
+if __name__ == "__main__":
+    test()
